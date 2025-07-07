@@ -1,0 +1,248 @@
+# Enhanced Lovelace dashboard for Canal & River Trust integration
+# Uses only built-in Home Assistant cards for maximum compatibility
+# Now includes map support for plotting waterway issues
+
+title: "🚢 Canal & River Trust Status"
+views:
+  - title: Overview
+    icon: mdi:ferry
+    cards:
+      # Basic Status Summary
+      - type: horizontal-stack
+        cards:
+          - type: entity
+            entity: sensor.canal_river_trust_closures
+            name: Active Closures
+            icon: mdi:lock-alert
+            state_color: true
+          - type: entity
+            entity: sensor.canal_river_trust_stoppages
+            name: Current Stoppages
+            icon: mdi:construction
+            state_color: true
+          - type: entity
+            entity: sensor.canal_river_trust_emergency_issues
+            name: Emergency Issues
+            icon: mdi:alert-circle
+            state_color: true
+
+      # Activity Level Gauges
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.canal_river_trust_closures
+            name: "Closures"
+            min: 0
+            max: 20
+            severity:
+              green: 0
+              yellow: 5
+              red: 10
+          - type: gauge
+            entity: sensor.canal_river_trust_stoppages
+            name: "Stoppages"
+            min: 0
+            max: 15
+            severity:
+              green: 0
+              yellow: 3
+              red: 8
+
+      # Current Status Summary
+      - type: markdown
+        title: "📊 Current Status Summary"
+        content: |
+          **Waterway Status Overview**
+
+          - **Total Closures:** {{ states('sensor.canal_river_trust_closures') }}
+          - **Total Stoppages:** {{ states('sensor.canal_river_trust_stoppages') }}
+          - **Emergency Issues:** {{ states('sensor.canal_river_trust_emergency_issues') }}
+          - **Upcoming Issues:** {{ states('sensor.canal_river_trust_upcoming_issues') }}
+
+          **Most Affected Region:** {{ state_attr('sensor.canal_river_trust_regional_breakdown', 'most_affected_region') or 'Unknown' }}
+
+          **Last Updated:** {{ state_attr('sensor.canal_river_trust_closures', 'last_updated') or 'Never' }}
+
+      # History Graph
+      - type: history-graph
+        title: "📈 Issue Trends"
+        entities:
+          - sensor.canal_river_trust_closures
+          - sensor.canal_river_trust_stoppages
+          - sensor.canal_river_trust_emergency_issues
+          - sensor.canal_river_trust_upcoming_issues
+        hours_to_show: 168
+        refresh_interval: 0
+
+  - title: Map View
+    icon: mdi:map
+    cards:
+      # Map showing all locations
+      - type: map
+        title: "🗺️ Waterway Issues Map"
+        default_zoom: 6
+        entities:
+          - sensor.canal_river_trust_closures
+          - sensor.canal_river_trust_stoppages
+        geo_location_sources:
+          - canal_river_trust
+
+      # Location details
+      - type: markdown
+        title: "📍 Map Information"
+        content: |
+          **Interactive Map Features:**
+          
+          - **Blue markers:** Sensor locations (representative points)
+          - **Red markers:** Individual closure/stoppage locations
+          - **Zoom:** Use mouse wheel or touch gestures
+          - **Details:** Click markers to see issue information
+          
+          The map shows both sensor entities (which provide summary locations) and individual geo-location events (which show precise locations of each issue).
+
+  - title: Regional View
+    icon: mdi:map-marker-multiple
+    cards:
+      # Regional Breakdown
+      - type: markdown
+        title: "📍 Regional Breakdown"
+        content: |
+          {% set regional_data = state_attr('sensor.canal_river_trust_regional_breakdown', 'regional_breakdown') or {} %}
+          {% if regional_data %}
+          **Issues by Region:**
+          
+          {% for region, data in regional_data.items() %}
+          **{{ region }}:** {{ data.total }} total ({{ data.closures }} closures, {{ data.stoppages }} stoppages)
+          {% endfor %}
+          
+          **Most Affected:** {{ state_attr('sensor.canal_river_trust_regional_breakdown', 'most_affected_region') or 'None' }}
+          {% else %}
+          No regional data available.
+          {% endif %}
+
+      # Emergency Issues
+      - type: markdown
+        title: "🚨 Emergency Issues"
+        content: |
+          {% set emergency_issues = state_attr('sensor.canal_river_trust_emergency_issues', 'emergency_issues') or [] %}
+          {% if emergency_issues|length > 0 %}
+          {% for issue in emergency_issues %}
+          **{{ issue.title }}** ({{ issue.waterways }})  
+          Region: {{ issue.region }}  
+          {% if issue.start_date %}Start: {{ issue.start_date | as_timestamp | timestamp_custom('%d %b %Y') }}{% endif %}
+          
+          ---
+          {% endfor %}
+          {% else %}
+          ✅ No emergency issues reported.
+          {% endif %}
+
+      # Upcoming Issues
+      - type: markdown
+        title: "📅 Upcoming Issues (Next 7 Days)"
+        content: |
+          {% set upcoming_issues = state_attr('sensor.canal_river_trust_upcoming_issues', 'upcoming_issues') or [] %}
+          {% if upcoming_issues|length > 0 %}
+          {% for issue in upcoming_issues %}
+          **{{ issue.title }}** ({{ issue.waterways }})  
+          Region: {{ issue.region }} | Type: {{ issue.type }}  
+          Starting: {{ issue.start_date | as_timestamp | timestamp_custom('%d %b %Y') }} ({{ issue.days_until }} days)
+          
+          ---
+          {% endfor %}
+          {% else %}
+          ✅ No upcoming issues in the next 7 days.
+          {% endif %}
+
+  - title: Details
+    icon: mdi:format-list-bulleted
+    cards:
+      # Detailed Closures List
+      - type: markdown
+        title: "🚨 Current Closures"
+        content: |
+          {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+          {% if closures|length > 0 %}
+          {% for closure in closures %}
+          **{{ closure.title }}** ({{ closure.waterways }})  
+          *{{ closure.reason }}* | {{ closure.region }}  
+          {% if closure.start_date %}Start: {{ closure.start_date | as_timestamp | timestamp_custom('%d %b %Y') }}{% endif %}  
+          {% if closure.end_date %}End: {{ closure.end_date | as_timestamp | timestamp_custom('%d %b %Y') }}{% endif %}
+          {% if closure.coordinates %}📍 Coordinates: {{ closure.coordinates[1] }}, {{ closure.coordinates[0] }}{% endif %}
+          
+          ---
+          {% endfor %}
+          {% else %}
+          ✅ No current closures reported.
+          {% endif %}
+
+      # Detailed Stoppages List  
+      - type: markdown
+        title: "🚧 Current Stoppages"
+        content: |
+          {% set stoppages = state_attr('sensor.canal_river_trust_stoppages', 'stoppages') or [] %}
+          {% if stoppages|length > 0 %}
+          {% for stoppage in stoppages %}
+          **{{ stoppage.title }}** ({{ stoppage.waterways }})  
+          *{{ stoppage.reason }}* | {{ stoppage.region }}  
+          {% if stoppage.start_date %}Start: {{ stoppage.start_date | as_timestamp | timestamp_custom('%d %b %Y') }}{% endif %}  
+          {% if stoppage.end_date %}End: {{ stoppage.end_date | as_timestamp | timestamp_custom('%d %b %Y') }}{% endif %}
+          {% if stoppage.coordinates %}📍 Coordinates: {{ stoppage.coordinates[1] }}, {{ stoppage.coordinates[0] }}{% endif %}
+          
+          ---
+          {% endfor %}
+          {% else %}
+          ✅ No current stoppages reported.
+          {% endif %}
+
+      # All Sensors Overview
+      - type: entities
+        title: "🔍 All Canal & River Trust Sensors"
+        show_header_toggle: false
+        entities:
+          - entity: sensor.canal_river_trust_closures
+            name: "Total Closures"
+            icon: mdi:lock
+          - entity: sensor.canal_river_trust_stoppages 
+            name: "Total Stoppages"
+            icon: mdi:construction
+          - entity: sensor.canal_river_trust_emergency_issues
+            name: "Emergency Issues"
+            icon: mdi:alert-circle
+          - entity: sensor.canal_river_trust_regional_breakdown
+            name: "Regional Data"
+            icon: mdi:map-marker-multiple
+          - entity: sensor.canal_river_trust_upcoming_issues
+            name: "Upcoming Issues"
+            icon: mdi:calendar-clock
+
+      # Data Freshness
+      - type: entity
+        entity: sensor.canal_river_trust_closures
+        attribute: last_updated
+        name: "Last Data Update"
+        icon: mdi:clock-outline
+
+      # Configuration Info
+      - type: markdown
+        title: "ℹ️ Integration Information"
+        content: |
+          **Canal & River Trust Integration v1.0.2**
+          
+          This dashboard displays real-time data from the Canal & River Trust API showing current waterway closures, stoppages, and other issues.
+          
+          **New Features:**
+          - **Map Support:** Issues are now plotted on interactive maps
+          - **Geo-location Events:** Individual markers for each issue
+          - **Location Data:** Coordinates included in issue details
+          
+          **Data Updates:** Every 4 hours
+          **Source:** Canal & River Trust official API
+          **Coverage:** All CRT managed waterways across England & Wales
+          
+          **Sensor Descriptions:**
+          - **Closures:** Complete waterway closures preventing navigation
+          - **Stoppages:** Partial restrictions or temporary issues
+          - **Emergency Issues:** Urgent problems requiring immediate attention
+          - **Regional Breakdown:** Issue distribution across regions
+          - **Upcoming Issues:** Planned works starting within 7 days

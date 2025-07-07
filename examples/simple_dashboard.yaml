@@ -1,0 +1,218 @@
+# Simple, working Lovelace dashboard for Canal & River Trust integration
+# Uses ONLY built-in Home Assistant cards - no custom cards required
+
+title: "🚢 Canal & River Trust Status"
+views:
+  - title: Overview
+    icon: mdi:ferry
+    cards:
+      # Status Summary
+      - type: horizontal-stack
+        cards:
+          - type: entity
+            entity: sensor.canal_river_trust_closures
+            name: "Active Closures"
+            icon: mdi:lock-alert
+            state_color: true
+          - type: entity
+            entity: sensor.canal_river_trust_stoppages
+            name: "Current Stoppages"
+            icon: mdi:construction
+            state_color: true
+          - type: entity
+            entity: sensor.canal_river_trust_emergency_issues
+            name: "Emergency Issues"
+            icon: mdi:alert-circle
+            state_color: true
+
+      # Activity Gauge
+      - type: gauge
+        entity: sensor.canal_river_trust_closures
+        name: "Closure Activity Level"
+        min: 0
+        max: 20
+        severity:
+          green: 0
+          yellow: 5
+          red: 10
+        needle: true
+
+      # Trend Graph
+      - type: history-graph
+        title: "📈 Issue Trends (Last Week)"
+        entities:
+          - sensor.canal_river_trust_closures
+          - sensor.canal_river_trust_stoppages
+          - sensor.canal_river_trust_emergency_issues
+          - sensor.canal_river_trust_upcoming_issues
+        hours_to_show: 168
+        refresh_interval: 0
+
+      # Statistics
+      - type: horizontal-stack
+        cards:
+          - type: statistic
+            entity: sensor.canal_river_trust_closures
+            name: "Total Closures"
+            stat_type: state
+          - type: statistic
+            entity: sensor.canal_river_trust_stoppages
+            name: "Total Stoppages"
+            stat_type: state
+
+      # Status Summary
+      - type: markdown
+        title: "📊 Current Status"
+        content: |
+          ## Waterway Status Overview
+          
+          **Current Issues:**
+          - 🔒 **Closures:** {{ states('sensor.canal_river_trust_closures') }}
+          - 🚧 **Stoppages:** {{ states('sensor.canal_river_trust_stoppages') }}
+          - 🚨 **Emergency Issues:** {{ states('sensor.canal_river_trust_emergency_issues') }}
+          - 📅 **Upcoming (7 days):** {{ states('sensor.canal_river_trust_upcoming_issues') }}
+          
+          **Regional Info:**
+          - 🗺️ **Most Affected Region:** {{ state_attr('sensor.canal_river_trust_regional_breakdown', 'most_affected_region') or 'Unknown' }}
+          
+          **Last Updated:** {{ state_attr('sensor.canal_river_trust_closures', 'last_updated') or 'Never' }}
+          
+          {% if states('sensor.canal_river_trust_emergency_issues') | int > 0 %}
+          ⚠️ **ALERT:** Emergency issues detected! Check details below.
+          {% endif %}
+
+      # Emergency Alert (conditional)
+      - type: conditional
+        conditions:
+          - entity: sensor.canal_river_trust_emergency_issues
+            state_not: "0"
+        card:
+          type: entity
+          entity: sensor.canal_river_trust_emergency_issues
+          name: "🚨 Emergency Waterway Issues"
+          state_color: true
+
+  - title: Details
+    icon: mdi:format-list-bulleted
+    cards:
+      # Detailed Entity Information
+      - type: entities
+        title: "🔍 Detailed Information"
+        show_header_toggle: false
+        entities:
+          - entity: sensor.canal_river_trust_closures
+            name: "Closures"
+            icon: mdi:lock-alert
+          - entity: sensor.canal_river_trust_stoppages
+            name: "Stoppages"
+            icon: mdi:construction
+          - entity: sensor.canal_river_trust_emergency_issues
+            name: "Emergency Issues"
+            icon: mdi:alert-circle
+          - entity: sensor.canal_river_trust_upcoming_issues
+            name: "Upcoming Issues"
+            icon: mdi:calendar-clock
+          - entity: sensor.canal_river_trust_regional_breakdown
+            name: "Regional Breakdown"
+            icon: mdi:map-marker-multiple
+          - type: divider
+          - entity: sensor.canal_river_trust_closures
+            type: attribute
+            attribute: last_updated
+            name: "Last Data Update"
+            icon: mdi:clock-outline
+
+      # Closure Details
+      - type: markdown
+        title: "🔒 Closure Information"
+        content: |
+          {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+          {% if closures %}
+          **Recent Closures:**
+          {% for closure in closures[:5] %}
+          
+          **{{ loop.index }}. {{ closure.title }}**
+          - 📍 Location: {{ closure.waterways }}, {{ closure.region }}
+          - 🏷️ Type: {{ closure.type }}
+          - 🔧 Reason: {{ closure.reason }}
+          - 📅 Start: {{ closure.start_date }}
+          - 📅 End: {{ closure.end_date or 'TBD' }}
+          
+          ---
+          {% endfor %}
+          {% else %}
+          ✅ No active closures at this time.
+          {% endif %}
+
+      # Stoppage Details
+      - type: markdown
+        title: "🚧 Stoppage Information"
+        content: |
+          {% set stoppages = state_attr('sensor.canal_river_trust_stoppages', 'stoppages') or [] %}
+          {% if stoppages %}
+          **Recent Stoppages:**
+          {% for stoppage in stoppages[:5] %}
+          
+          **{{ loop.index }}. {{ stoppage.title }}**
+          - 📍 Location: {{ stoppage.waterways }}, {{ stoppage.region }}
+          - 🏷️ Type: {{ stoppage.type }}
+          - 🔧 Reason: {{ stoppage.reason }}
+          - 📅 Start: {{ stoppage.start_date }}
+          - 📅 End: {{ stoppage.end_date or 'TBD' }}
+          
+          ---
+          {% endfor %}
+          {% else %}
+          ✅ No active stoppages at this time.
+          {% endif %}
+
+  - title: Map
+    icon: mdi:map
+    cards:
+      # Simple Map View
+      - type: map
+        title: "🗺️ Waterway Issues"
+        default_zoom: 6
+        entities:
+          - sensor.canal_river_trust_closures
+          - sensor.canal_river_trust_stoppages
+        geo_location_sources:
+          - canal_river_trust
+
+      # Regional Breakdown
+      - type: markdown
+        title: "📍 Regional Breakdown"
+        content: |
+          {% set regional = state_attr('sensor.canal_river_trust_regional_breakdown', 'regional_breakdown') or {} %}
+          {% if regional %}
+          **Issues by Region:**
+          
+          {% for region, data in regional.items() %}
+          **{{ region }}:**
+          - 🔒 Closures: {{ data.closures }}
+          - 🚧 Stoppages: {{ data.stoppages }}
+          - 📊 Total: {{ data.total }}
+          
+          {% endfor %}
+          
+          **Most Affected:** {{ state_attr('sensor.canal_river_trust_regional_breakdown', 'most_affected_region') or 'None' }}
+          {% else %}
+          No regional data available.
+          {% endif %}
+
+      # Map Usage Info
+      - type: markdown
+        title: "🗺️ Map Usage"
+        content: |
+          **Map Features:**
+          - Blue markers show sensor locations (summary points)
+          - Red markers show individual issue locations
+          - Click markers for detailed information
+          - Use zoom controls or mouse wheel to navigate
+          
+          **Available Sensors:**
+          - `sensor.canal_river_trust_closures`
+          - `sensor.canal_river_trust_stoppages`
+          - `sensor.canal_river_trust_emergency_issues`
+          - `sensor.canal_river_trust_regional_breakdown`
+          - `sensor.canal_river_trust_upcoming_issues`

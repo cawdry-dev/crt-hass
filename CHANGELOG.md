@@ -7,12 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Map Support**: Integration now supports plotting waterway issues on Home Assistant maps
+- **Geo-location Platform**: Individual location markers for each notice/issue
+- **Device Tracker Platform**: Alternative tracking entities for notices
+- **Location Properties**: Sensors now include latitude/longitude for map compatibility
+- **Enhanced Dashboards**: Updated dashboards with interactive map views
+- **Coordinate Display**: GPS coordinates shown in issue details
+- **Map Documentation**: Comprehensive guide for map configuration and usage
+
+### Changed
+- **API Enhancement**: Now requests geometry data from Canal & River Trust API
+- **Sensor Platform**: Added latitude/longitude properties to closure and stoppage sensors
+- **Dashboard Updates**: Enhanced and simple dashboards now include map functionality
+- **Version Bump**: Updated to v1.0.2 for map support features
+
 ### Planned
-- Map visualization of closures and stoppages
-- Enhanced location filtering with GPS coordinates
-- Historical data storage and trends
-- Push notifications for new issues
-- Route planning integration
+- **Map Clustering**: Group nearby issues to reduce map clutter
+- **Custom Map Icons**: Different marker styles for closure types
+- **Route Integration**: Integration with navigation systems
+- **Historical Tracking**: Show issue movement over time
+- **Proximity Zones**: Automatic zone creation around frequent issue areas
+
+## [1.0.2] - 2025-01-XX
+
+### Fixed
+- Fixed dashboard entity references - removed non-existent sensors
+- Corrected sensor names in dashboard examples to match actual integration sensors
+- Removed unsupported custom cards from dashboard examples
+- Fixed map card configuration that was incompatible with sensor data format
+- Replaced custom `fold-entity-row` cards with built-in alternatives
+
+### Added
+- Dashboard troubleshooting guide (`DASHBOARD_TROUBLESHOOTING.md`)
+- Updated README with correct sensor entity IDs and dashboard information
+- Enhanced dashboard templates with better error handling and fallback values
+
+### Changed
+- Updated `enhanced_dashboard.yaml` to use only built-in Home Assistant cards
+- Improved `simple_dashboard.yaml` for better compatibility
+- Updated dashboard templates to handle missing data gracefully
 
 ## [1.0.1] - 2025-07-07
 

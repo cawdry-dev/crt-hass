@@ -1,0 +1,136 @@
+# Template sensors for advanced Canal & River Trust analytics
+# Add these to your configuration.yaml
+
+template:
+  - sensor:
+      # Most affected waterway
+      - name: "Most Affected Waterway"
+        icon: mdi:water
+        state: >
+          {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+          {% set stoppages = state_attr('sensor.canal_river_trust_stoppages', 'stoppages') or [] %}
+          {% set all_issues = closures + stoppages %}
+          {% set waterways = {} %}
+          {% for issue in all_issues %}
+            {% set waterway = issue.waterways %}
+            {% set count = waterways.get(waterway, 0) + 1 %}
+            {% set _ = waterways.update({waterway: count}) %}
+          {% endfor %}
+          {% if waterways %}
+            {{ waterways | dictsort(false, 'value') | last | first }}
+          {% else %}
+            None
+          {% endif %}
+        attributes:
+          issue_count: >
+            {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+            {% set stoppages = state_attr('sensor.canal_river_trust_stoppages', 'stoppages') or [] %}
+            {% set all_issues = closures + stoppages %}
+            {% set waterways = {} %}
+            {% for issue in all_issues %}
+              {% set waterway = issue.waterways %}
+              {% set count = waterways.get(waterway, 0) + 1 %}
+              {% set _ = waterways.update({waterway: count}) %}
+            {% endfor %}
+            {% if waterways %}
+              {{ waterways | dictsort(false, 'value') | last | last }}
+            {% else %}
+              0
+            {% endif %}
+
+      # Issues ending soon (next 7 days)
+      - name: "Issues Ending Soon"
+        icon: mdi:calendar-check
+        state: >
+          {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+          {% set stoppages = state_attr('sensor.canal_river_trust_stoppages', 'stoppages') or [] %}
+          {% set all_issues = closures + stoppages %}
+          {% set count = 0 %}
+          {% set now = now().timestamp() %}
+          {% set week_from_now = now + (7 * 24 * 3600) %}
+          {% for issue in all_issues %}
+            {% if issue.end_date %}
+              {% set end_time = strptime(issue.end_date[:10], '%Y-%m-%d').timestamp() %}
+              {% if now <= end_time <= week_from_now %}
+                {% set count = count + 1 %}
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+          {{ count }}
+
+      # Emergency vs Planned ratio
+      - name: "Emergency vs Planned Ratio"
+        icon: mdi:chart-pie
+        state: >
+          {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+          {% set stoppages = state_attr('sensor.canal_river_trust_stoppages', 'stoppages') or [] %}
+          {% set all_issues = closures + stoppages %}
+          {% set emergency = all_issues | selectattr('reason', 'eq', 'Emergency') | list | length %}
+          {% set total = all_issues | length %}
+          {% if total > 0 %}
+            {{ ((emergency / total) * 100) | round(1) }}%
+          {% else %}
+            0%
+          {% endif %}
+        attributes:
+          emergency_count: >
+            {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+            {% set stoppages = state_attr('sensor.canal_river_trust_stoppages', 'stoppages') or [] %}
+            {% set all_issues = closures + stoppages %}
+            {{ all_issues | selectattr('reason', 'eq', 'Emergency') | list | length }}
+          planned_count: >
+            {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+            {% set stoppages = state_attr('sensor.canal_river_trust_stoppages', 'stoppages') or [] %}
+            {% set all_issues = closures + stoppages %}
+            {{ all_issues | rejectattr('reason', 'eq', 'Emergency') | list | length }}
+
+      # Average issue duration
+      - name: "Average Issue Duration"
+        icon: mdi:timer-outline
+        unit_of_measurement: "days"
+        state: >
+          {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+          {% set stoppages = state_attr('sensor.canal_river_trust_stoppages', 'stoppages') or [] %}
+          {% set all_issues = closures + stoppages %}
+          {% set durations = [] %}
+          {% for issue in all_issues %}
+            {% if issue.start_date and issue.end_date %}
+              {% set start = strptime(issue.start_date[:10], '%Y-%m-%d') %}
+              {% set end = strptime(issue.end_date[:10], '%Y-%m-%d') %}
+              {% set duration = (end - start).days %}
+              {% if duration > 0 %}
+                {% set _ = durations.append(duration) %}
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+          {% if durations %}
+            {{ (durations | sum / durations | length) | round(1) }}
+          {% else %}
+            0
+          {% endif %}
+
+  - binary_sensor:
+      # High activity alert (more than 10 total issues)
+      - name: "High Waterway Activity"
+        icon: mdi:alert-circle
+        state: >
+          {% set total = states('sensor.canal_river_trust_closures') | int + states('sensor.canal_river_trust_stoppages') | int %}
+          {{ total > 10 }}
+        attributes:
+          total_issues: >
+            {{ states('sensor.canal_river_trust_closures') | int + states('sensor.canal_river_trust_stoppages') | int }}
+
+      # Emergency issues present
+      - name: "Emergency Issues Present"
+        icon: mdi:alert
+        state: >
+          {{ states('sensor.canal_river_trust_emergency_issues') | int > 0 }}
+
+# Utility meter to track daily changes
+utility_meter:
+  daily_closures:
+    source: sensor.canal_river_trust_closures
+    cycle: daily
+  daily_stoppages:
+    source: sensor.canal_river_trust_stoppages
+    cycle: daily

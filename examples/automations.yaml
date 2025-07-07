@@ -1,4 +1,5 @@
-# Example Home Assistant automations for Canal & River Trust integration
+# Enhanced Home Assistant automations for Canal & River Trust integration
+# These examples show more advanced notification and monitoring capabilities
 
 # Automation 1: Notify when new closures are detected
 automation:

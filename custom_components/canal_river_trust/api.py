@@ -34,7 +34,7 @@ class CanalRiverTrustAPI:
             "geometry": "point",
             "start": start_date,
             "end": end_date,
-            "fields": "title,region,waterways,path,typeId,reasonId,programmeId,start,end,state"
+            "fields": "title,region,waterways,path,typeId,reasonId,programmeId,start,end,state,geometry"
         }
         
         try:

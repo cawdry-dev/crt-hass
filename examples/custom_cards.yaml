@@ -1,0 +1,146 @@
+# VERIFIED Custom Lovelace cards for Canal & River Trust integration
+# Only includes cards that actually exist and work
+
+# 1. Mini Graph Card (REAL - available in HACS)
+type: custom:mini-graph-card
+entities:
+  - sensor.canal_river_trust_closures
+  - sensor.canal_river_trust_stoppages
+  - sensor.canal_river_trust_emergency_issues
+name: "Waterway Issues Trend"
+height: 150
+line_width: 3
+font_size: 75
+animate: true
+show:
+  name: true
+  icon: true
+  state: true
+  legend: true
+color_thresholds:
+  - value: 0
+    color: "#4CAF50"
+  - value: 5
+    color: "#FF9800"
+  - value: 10
+    color: "#F44336"
+
+# 2. ApexCharts Card (REAL - available in HACS)
+type: custom:apexcharts-card
+title: "📊 Regional Distribution"
+header:
+  show: true
+  title: Issues by Region
+chart_type: donut
+series:
+  - entity: sensor.canal_river_trust_regional_summary
+    name: Issues
+    data_generator: |
+      const regional = entity.attributes.regional_breakdown || {};
+      return Object.entries(regional).map(([region, data]) => ({
+        name: region,
+        data: data.total
+      }));
+
+# 3. Auto-entities Card (REAL - available in HACS)
+type: custom:auto-entities
+card:
+  type: entities
+  title: "🚨 Current Issues"
+  show_header_toggle: false
+filter:
+  include:
+    - entity_id: "sensor.canal_river_trust_*"
+      options:
+        secondary_info: last-updated
+  exclude:
+    - entity_id: "*regional*"
+    - entity_id: "*upcoming*"
+sort:
+  method: state
+  numeric: true
+  reverse: true
+
+# 4. Conditional Alert Card (BUILT-IN)
+type: conditional
+conditions:
+  - entity: sensor.canal_river_trust_emergency_issues
+    state_not: "0"
+card:
+  type: alert
+  entity: sensor.canal_river_trust_emergency_issues
+  name: "🚨 Emergency Waterway Issues"
+  state: "on"
+
+# 5. Built-in Map Card
+type: map
+title: "🗺️ Waterway Issues Map"
+default_zoom: 6
+entities:
+  - sensor.canal_river_trust_closures
+  - sensor.canal_river_trust_stoppages
+
+# 6. Built-in Gauge Card
+type: gauge
+entity: sensor.canal_river_trust_closures
+name: "Closure Activity Level"
+min: 0
+max: 20
+severity:
+  green: 0
+  yellow: 5
+  red: 10
+needle: true
+
+# 7. Built-in Statistics Card
+type: statistic
+entity: sensor.canal_river_trust_closures
+name: "Closures This Week"
+stat_type: state
+
+# 8. Built-in History Graph
+type: history-graph
+title: "📈 Issue Trends"
+entities:
+  - sensor.canal_river_trust_closures
+  - sensor.canal_river_trust_stoppages
+  - sensor.canal_river_trust_emergency_issues
+hours_to_show: 168
+
+# 9. Markdown Summary Card
+type: markdown
+title: "📊 Waterway Status Summary"
+content: |
+  ## Current Status
+
+  **Active Issues:**
+  - 🔒 Closures: {{ states('sensor.canal_river_trust_closures') }}
+  - 🚧 Stoppages: {{ states('sensor.canal_river_trust_stoppages') }}
+  - 🚨 Emergency: {{ states('sensor.canal_river_trust_emergency_issues') }}
+
+  **Upcoming:**
+  - 📅 Next 7 days: {{ states('sensor.canal_river_trust_upcoming_issues') }}
+
+  **Last Updated:** {{ state_attr('sensor.canal_river_trust_closures', 'last_updated') }}
+
+# 10. Entity List Card
+type: entities
+title: "🔍 Quick Status"
+show_header_toggle: false
+entities:
+  - entity: sensor.canal_river_trust_closures
+    name: "Active Closures"
+    icon: mdi:lock-alert
+  - entity: sensor.canal_river_trust_stoppages
+    name: "Current Stoppages"
+    icon: mdi:construction
+  - entity: sensor.canal_river_trust_emergency_issues
+    name: "Emergency Issues"
+    icon: mdi:alert-circle
+  - entity: sensor.canal_river_trust_upcoming_issues
+    name: "Upcoming Issues"
+    icon: mdi:calendar-clock
+  - type: divider
+  - entity: sensor.canal_river_trust_regional_summary
+    name: "Affected Regions"
+    icon: mdi:map-marker-multiple

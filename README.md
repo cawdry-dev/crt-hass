@@ -10,8 +10,12 @@ A Home Assistant custom integration that provides real-time data about canal and
 
 - **Closures Sensor**: Monitor current waterway closures
 - **Stoppages Sensor**: Track planned and emergency stoppages
-- **Location Filtering**: Filter by specific waterways or regions
-- **Real-time Updates**: Configurable update intervals
+- **Emergency Issues Sensor**: Alert on urgent waterway problems
+- **Regional Breakdown Sensor**: Regional distribution of issues
+- **Upcoming Issues Sensor**: Planned works starting within 7 days
+- **Map Support**: Plot issues on interactive Home Assistant maps
+- **Location Data**: GPS coordinates for each waterway issue
+- **Real-time Updates**: Configurable update intervals (default: 4 hours)
 - **Rich Attributes**: Detailed information about each closure/stoppage
 
 ## Installation
@@ -48,15 +52,55 @@ The integration can be configured through the Home Assistant UI:
 
 ## Sensors
 
-### Closures Sensor
-- **Name**: `sensor.crt_closures`
+The integration creates 5 sensors:
+
+### 1. Closures Sensor
+- **Entity ID**: `sensor.canal_river_trust_closures`
 - **State**: Number of active closures
 - **Attributes**: Detailed list of all closures with location, reason, and expected duration
 
-### Stoppages Sensor
-- **Name**: `sensor.crt_stoppages`
+### 2. Stoppages Sensor
+- **Entity ID**: `sensor.canal_river_trust_stoppages`
 - **State**: Number of active stoppages
 - **Attributes**: Detailed list of all stoppages with location, type, and schedule
+
+### 3. Emergency Issues Sensor
+- **Entity ID**: `sensor.canal_river_trust_emergency_issues`
+- **State**: Number of emergency issues
+- **Attributes**: Detailed list of emergency issues requiring immediate attention
+
+### 4. Regional Breakdown Sensor
+- **Entity ID**: `sensor.canal_river_trust_regional_breakdown`
+- **State**: Total number of issues across all regions
+- **Attributes**: Regional breakdown and most affected region
+
+### 5. Upcoming Issues Sensor
+- **Entity ID**: `sensor.canal_river_trust_upcoming_issues`
+- **State**: Number of issues starting within 7 days
+- **Attributes**: Detailed list of upcoming planned works
+
+## Dashboards
+
+Pre-built dashboard examples are available in the `examples/` folder:
+
+- **`simple_dashboard.yaml`**: Basic dashboard using only built-in cards
+- **`enhanced_dashboard.yaml`**: Advanced dashboard with comprehensive features including maps
+- **`automations.yaml`**: Example automation triggers
+
+### Map Support
+
+The integration now supports plotting waterway issues on Home Assistant maps:
+
+- **Interactive Maps**: View all closures and stoppages on a map
+- **Geo-location Events**: Individual markers for each issue
+- **Coordinate Data**: GPS coordinates included in sensor attributes
+- **Multiple Platforms**: Sensor, geo-location, and device tracker entities
+
+See [`MAP_SUPPORT.md`](MAP_SUPPORT.md) for detailed map configuration and usage.
+
+### Dashboard Troubleshooting
+
+If you encounter dashboard configuration issues, see [`DASHBOARD_TROUBLESHOOTING.md`](DASHBOARD_TROUBLESHOOTING.md) for common solutions.
 
 ## Data Source
 
