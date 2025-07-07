@@ -1,0 +1,210 @@
+# Map Configuration for Canal & River Trust Data
+# Multiple approaches to display waterway issues on maps
+
+# Method 1: Basic Map Card (Built-in)
+# This shows the main sensors as single points on the map
+type: map
+title: "🗺️ Waterway Issues Overview"
+default_zoom: 6
+entities:
+  - sensor.canal_river_trust_closures
+  - sensor.canal_river_trust_stoppages
+  - sensor.canal_river_trust_emergency_issues
+
+---
+
+# Method 2: Custom Map with Markers using Template Sensors
+# First, add these template sensors to your configuration.yaml:
+
+template:
+  - sensor:
+      # Create individual sensors for each closure (up to 5)
+      - name: "Closure 1 Location"
+        state: >
+          {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+          {% if closures|length > 0 %}
+            {{ closures[0].title[:50] }}
+          {% else %}
+            unavailable
+          {% endif %}
+        attributes:
+          latitude: >
+            {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+            {% if closures|length > 0 and closures[0].coordinates %}
+              {{ closures[0].coordinates[1] }}
+            {% endif %}
+          longitude: >
+            {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+            {% if closures|length > 0 and closures[0].coordinates %}
+              {{ closures[0].coordinates[0] }}
+            {% endif %}
+          waterway: >
+            {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+            {% if closures|length > 0 %}
+              {{ closures[0].waterways }}
+            {% endif %}
+          region: >
+            {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+            {% if closures|length > 0 %}
+              {{ closures[0].region }}
+            {% endif %}
+          reason: >
+            {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+            {% if closures|length > 0 %}
+              {{ closures[0].reason }}
+            {% endif %}
+
+      - name: "Closure 2 Location"
+        state: >
+          {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+          {% if closures|length > 1 %}
+            {{ closures[1].title[:50] }}
+          {% else %}
+            unavailable
+          {% endif %}
+        attributes:
+          latitude: >
+            {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+            {% if closures|length > 1 and closures[1].coordinates %}
+              {{ closures[1].coordinates[1] }}
+            {% endif %}
+          longitude: >
+            {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+            {% if closures|length > 1 and closures[1].coordinates %}
+              {{ closures[1].coordinates[0] }}
+            {% endif %}
+          waterway: >
+            {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+            {% if closures|length > 1 %}
+              {{ closures[1].waterways }}
+            {% endif %}
+
+      # Add similar sensors for stoppages
+      - name: "Stoppage 1 Location"
+        state: >
+          {% set stoppages = state_attr('sensor.canal_river_trust_stoppages', 'stoppages') or [] %}
+          {% if stoppages|length > 0 %}
+            {{ stoppages[0].title[:50] }}
+          {% else %}
+            unavailable
+          {% endif %}
+        attributes:
+          latitude: >
+            {% set stoppages = state_attr('sensor.canal_river_trust_stoppages', 'stoppages') or [] %}
+            {% if stoppages|length > 0 and stoppages[0].coordinates %}
+              {{ stoppages[0].coordinates[1] }}
+            {% endif %}
+          longitude: >
+            {% set stoppages = state_attr('sensor.canal_river_trust_stoppages', 'stoppages') or [] %}
+            {% if stoppages|length > 0 and stoppages[0].coordinates %}
+              {{ stoppages[0].coordinates[0] }}
+            {% endif %}
+          waterway: >
+            {% set stoppages = state_attr('sensor.canal_river_trust_stoppages', 'stoppages') or [] %}
+            {% if stoppages|length > 0 %}
+              {{ stoppages[0].waterways }}
+            {% endif %}
+
+# Then use this map card:
+type: map
+title: "🗺️ Individual Waterway Issues"
+default_zoom: 8
+entities:
+  - sensor.closure_1_location
+  - sensor.closure_2_location
+  - sensor.stoppage_1_location
+
+---
+
+# Method 3: Map with Custom Markers (if you have custom cards)
+# Requires: custom:map-card from HACS
+type: custom:map-card
+title: "🗺️ Detailed Waterway Map"
+default_zoom: 7
+entities:
+  - entity: sensor.canal_river_trust_closures
+    icon: mdi:lock-alert
+    color: red
+  - entity: sensor.canal_river_trust_stoppages
+    icon: mdi:construction
+    color: orange
+
+---
+
+# Method 4: Markdown Map with Coordinates List
+type: markdown
+title: "📍 Issue Locations"
+content: |
+  ## Current Waterway Issues with Coordinates
+  
+  ### 🔒 Closures
+  {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+  {% for closure in closures[:5] %}
+  {% if closure.coordinates %}
+  **{{ closure.title }}**
+  - 📍 Location: {{ closure.waterways }}, {{ closure.region }}
+  - 🗺️ Coordinates: {{ closure.coordinates[1] }}, {{ closure.coordinates[0] }}
+  - 🔧 Reason: {{ closure.reason }}
+  - [View on Google Maps](https://www.google.com/maps?q={{ closure.coordinates[1] }},{{ closure.coordinates[0] }})
+  
+  {% endif %}
+  {% endfor %}
+  
+  ### 🚧 Stoppages
+  {% set stoppages = state_attr('sensor.canal_river_trust_stoppages', 'stoppages') or [] %}
+  {% for stoppage in stoppages[:5] %}
+  {% if stoppage.coordinates %}
+  **{{ stoppage.title }}**
+  - 📍 Location: {{ stoppage.waterways }}, {{ stoppage.region }}
+  - 🗺️ Coordinates: {{ stoppage.coordinates[1] }}, {{ stoppage.coordinates[0] }}
+  - 🔧 Reason: {{ stoppage.reason }}
+  - [View on Google Maps](https://www.google.com/maps?q={{ stoppage.coordinates[1] }},{{ stoppage.coordinates[0] }})
+  
+  {% endif %}
+  {% endfor %}
+
+---
+
+# Method 5: Complete Map Dashboard View
+title: "🗺️ Waterway Issues Map"
+icon: mdi:map
+cards:
+  # Main map
+  - type: map
+    title: "Waterway Issues Overview"
+    default_zoom: 6
+    entities:
+      - sensor.canal_river_trust_closures
+      - sensor.canal_river_trust_stoppages
+
+  # Statistics overlay
+  - type: horizontal-stack
+    cards:
+      - type: entity
+        entity: sensor.canal_river_trust_closures
+        name: "Closures"
+        icon: mdi:lock-alert
+      - type: entity
+        entity: sensor.canal_river_trust_stoppages
+        name: "Stoppages"
+        icon: mdi:construction
+
+  # Coordinate details
+  - type: markdown
+    title: "📍 Detailed Locations"
+    content: |
+      {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+      {% set stoppages = state_attr('sensor.canal_river_trust_stoppages', 'stoppages') or [] %}
+      {% set all_issues = closures + stoppages %}
+      
+      **Issues with GPS Coordinates:**
+      
+      {% for issue in all_issues[:10] %}
+      {% if issue.coordinates %}
+      - **{{ issue.title[:60] }}**
+        - 📍 {{ issue.waterways }}, {{ issue.region }}
+        - 🗺️ [{{ issue.coordinates[1] }}, {{ issue.coordinates[0] }}](https://www.google.com/maps?q={{ issue.coordinates[1] }},{{ issue.coordinates[0] }})
+        - 🏷️ {{ issue.type }} - {{ issue.reason }}
+      
+      {% endif %}
+      {% endfor %}

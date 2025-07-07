@@ -1,0 +1,165 @@
+# Simple Map Setup for Canal & River Trust Data
+# This works immediately with the existing sensors
+
+# STEP 1: Add this to your Lovelace dashboard
+# Basic map showing sensor locations
+type: map
+title: "🗺️ Waterway Issues"
+default_zoom: 6
+entities:
+  - sensor.canal_river_trust_closures
+  - sensor.canal_river_trust_stoppages
+  - sensor.canal_river_trust_emergency_issues
+
+---
+
+# STEP 2: Enhanced map view with details
+type: vertical-stack
+cards:
+  # Map
+  - type: map
+    title: "🗺️ Canal & River Trust Issues"
+    default_zoom: 7
+    entities:
+      - sensor.canal_river_trust_closures
+      - sensor.canal_river_trust_stoppages
+
+  # Quick stats
+  - type: horizontal-stack
+    cards:
+      - type: entity
+        entity: sensor.canal_river_trust_closures
+        name: "Closures"
+        icon: mdi:lock-alert
+        state_color: true
+      - type: entity
+        entity: sensor.canal_river_trust_stoppages
+        name: "Stoppages"
+        icon: mdi:construction
+        state_color: true
+
+  # Location details with clickable coordinates
+  - type: markdown
+    title: "📍 Issue Locations"
+    content: |
+      ## Current Issues with GPS Locations
+      
+      ### 🔒 Closures
+      {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+      {% if closures %}
+      {% for closure in closures[:5] %}
+      {% if closure.coordinates %}
+      **{{ loop.index }}. {{ closure.title }}**
+      - 📍 **Location:** {{ closure.waterways }}, {{ closure.region }}
+      - 🗺️ **GPS:** [{{ closure.coordinates[1] }}, {{ closure.coordinates[0] }}](https://www.google.com/maps?q={{ closure.coordinates[1] }},{{ closure.coordinates[0] }})
+      - 🔧 **Reason:** {{ closure.reason }}
+      - 📅 **Dates:** {{ closure.start_date }} to {{ closure.end_date or 'TBD' }}
+      
+      {% endif %}
+      {% endfor %}
+      {% else %}
+      ✅ No closures with GPS data currently.
+      {% endif %}
+      
+      ### 🚧 Stoppages
+      {% set stoppages = state_attr('sensor.canal_river_trust_stoppages', 'stoppages') or [] %}
+      {% if stoppages %}
+      {% for stoppage in stoppages[:5] %}
+      {% if stoppage.coordinates %}
+      **{{ loop.index }}. {{ stoppage.title }}**
+      - 📍 **Location:** {{ stoppage.waterways }}, {{ stoppage.region }}
+      - 🗺️ **GPS:** [{{ stoppage.coordinates[1] }}, {{ stoppage.coordinates[0] }}](https://www.google.com/maps?q={{ stoppage.coordinates[1] }},{{ stoppage.coordinates[0] }})
+      - 🔧 **Reason:** {{ stoppage.reason }}
+      - 📅 **Dates:** {{ stoppage.start_date }} to {{ stoppage.end_date or 'TBD' }}
+      
+      {% endif %}
+      {% endfor %}
+      {% else %}
+      ✅ No stoppages with GPS data currently.
+      {% endif %}
+
+---
+
+# STEP 3: Full map dashboard page
+# Add this as a new view in your dashboard
+title: "Waterway Map"
+icon: mdi:map
+path: waterway-map
+cards:
+  # Main map
+  - type: map
+    title: "🗺️ Canal & River Trust Issues Map"
+    default_zoom: 6
+    entities:
+      - sensor.canal_river_trust_closures
+      - sensor.canal_river_trust_stoppages
+      - sensor.canal_river_trust_emergency_issues
+
+  # Status summary
+  - type: entities
+    title: "📊 Current Status"
+    show_header_toggle: false
+    entities:
+      - entity: sensor.canal_river_trust_closures
+        name: "Total Closures"
+        icon: mdi:lock-alert
+      - entity: sensor.canal_river_trust_stoppages
+        name: "Total Stoppages"
+        icon: mdi:construction
+      - entity: sensor.canal_river_trust_emergency_issues
+        name: "Emergency Issues"
+        icon: mdi:alert-circle
+      - entity: sensor.canal_river_trust_regional_summary
+        name: "Affected Regions"
+        icon: mdi:map-marker-multiple
+
+  # Interactive location list
+  - type: markdown
+    title: "🔍 Interactive Location Guide"
+    content: |
+      ## Click coordinates to open in Google Maps
+      
+      {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+      {% set stoppages = state_attr('sensor.canal_river_trust_stoppages', 'stoppages') or [] %}
+      {% set all_issues = closures + stoppages %}
+      {% set issues_with_coords = all_issues | selectattr('coordinates') | list %}
+      
+      **{{ issues_with_coords | length }} issues with GPS coordinates:**
+      
+      {% for issue in issues_with_coords[:10] %}
+      **{{ loop.index }}. {{ issue.title[:60] }}{% if issue.title|length > 60 %}...{% endif %}**
+      - 🏷️ **Type:** {{ issue.type }} ({{ issue.reason }})
+      - 📍 **Location:** {{ issue.waterways }}, {{ issue.region }}
+      - 🗺️ **GPS:** [{{ issue.coordinates[1] }}, {{ issue.coordinates[0] }}](https://www.google.com/maps?q={{ issue.coordinates[1] }},{{ issue.coordinates[0] }}&z=15)
+      - 📅 **Period:** {{ issue.start_date }} → {{ issue.end_date or 'Ongoing' }}
+      
+      ---
+      {% endfor %}
+      
+      {% if issues_with_coords | length == 0 %}
+      ℹ️ No issues with GPS coordinates are currently available.
+      {% endif %}
+
+---
+
+# STEP 4: Regional map focus
+# Shows issues grouped by region
+type: markdown
+title: "🗺️ Regional Map Links"
+content: |
+  ## Quick Regional Map Access
+  
+  {% set regional = state_attr('sensor.canal_river_trust_regional_summary', 'regional_breakdown') or {} %}
+  {% if regional %}
+  Click to view each region on Google Maps:
+  
+  {% for region, data in regional.items() %}
+  **{{ region }}** ({{ data.total }} issue{% if data.total != 1 %}s{% endif %})
+  - 🔒 {{ data.closures }} closure{% if data.closures != 1 %}s{% endif %}
+  - 🚧 {{ data.stoppages }} stoppage{% if data.stoppages != 1 %}s{% endif %}
+  - [🗺️ View {{ region }} on map](https://www.google.com/maps/search/{{ region | urlencode }}+canal+river+waterway)
+  
+  {% endfor %}
+  {% else %}
+  No regional data available.
+  {% endif %}
