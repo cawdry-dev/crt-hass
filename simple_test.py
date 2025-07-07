@@ -84,13 +84,13 @@ def test_api_with_params(params, test_name):
 def test_api():
     """Run multiple API tests with different parameters."""
 
-    # Test 1: Current integration parameters
+    # Test 1: Current integration parameters (fixed)
     params1 = {
         "consult": "false",
         "geometry": "point",
-        "fields": "title,region,waterways,path,typeId,reasonId,programmeId,start,end,state",
         "start": datetime.now().strftime("%Y-%m-%d"),
-        "end": (datetime.now() + timedelta(days=365)).strftime("%Y-%m-%d")
+        "end": (datetime.now() + timedelta(days=365)).strftime("%Y-%m-%d"),
+        "fields": "title,region,waterways,path,typeId,reasonId,programmeId,start,end,state"
     }
     test_api_with_params(params1, "Current Integration Parameters")
 

@@ -22,11 +22,11 @@ class CanalRiverTrustAPI:
 
     async def get_notices(self, start_date: str | None = None, end_date: str | None = None) -> list[dict[str, Any]]:
         """Get notices (stoppages/closures) from the API."""
-        # Default to one year window if no dates provided (today + 364 days = exactly 1 year)
+        # Default to exactly one year window (365 days from today)
         if not start_date:
             start_date = datetime.now().strftime("%Y-%m-%d")
         if not end_date:
-            end_date = (datetime.now() + timedelta(days=364)).strftime("%Y-%m-%d")
+            end_date = (datetime.now() + timedelta(days=365)).strftime("%Y-%m-%d")
         
         # Build parameters in the same order as working Postman request
         params = {
@@ -34,7 +34,7 @@ class CanalRiverTrustAPI:
             "geometry": "point",
             "start": start_date,
             "end": end_date,
-            "fields": "title,region,waterways,path,typeId,reasonId,programmeId,start,end,state,geometry"
+            "fields": "title,region,waterways,path,typeId,reasonId,programmeId,start,end,state"
         }
         
         try:

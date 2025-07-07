@@ -23,3 +23,6 @@ validate_integration.py
 # Keep logo and icon files
 !custom_components/canal_river_trust/icon.png
 !custom_components/canal_river_trust/images/logo.png
+quick_test.py
+simple_test.py
+test_coordinates.py
