@@ -385,7 +385,15 @@ class CanalRiverTrustUpcomingSensor(CanalRiverTrustSensorBase):
             start_date_str = notice.get("start")
             if start_date_str:
                 try:
-                    start_date = datetime.fromisoformat(start_date_str.replace('Z', '+00:00'))
+                    # Parse the date string and make it timezone-naive for comparison
+                    if 'T' in start_date_str:
+                        # ISO format with time
+                        start_date = datetime.fromisoformat(start_date_str.replace('Z', '+00:00'))
+                        start_date = start_date.replace(tzinfo=None)  # Make timezone-naive
+                    else:
+                        # Date only format
+                        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+
                     if now <= start_date <= next_week:
                         upcoming_count += 1
                 except (ValueError, AttributeError):
@@ -410,7 +418,15 @@ class CanalRiverTrustUpcomingSensor(CanalRiverTrustSensorBase):
             start_date_str = notice.get("start")
             if start_date_str:
                 try:
-                    start_date = datetime.fromisoformat(start_date_str.replace('Z', '+00:00'))
+                    # Parse the date string and make it timezone-naive for comparison
+                    if 'T' in start_date_str:
+                        # ISO format with time
+                        start_date = datetime.fromisoformat(start_date_str.replace('Z', '+00:00'))
+                        start_date = start_date.replace(tzinfo=None)  # Make timezone-naive
+                    else:
+                        # Date only format
+                        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+
                     if now <= start_date <= next_week:
                         notice_info = {
                             "title": notice.get("title", "Unknown"),
