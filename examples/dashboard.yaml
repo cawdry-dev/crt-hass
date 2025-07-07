@@ -1,0 +1,91 @@
+# Example Lovelace dashboard configuration for Canal & River Trust integration
+
+title: Canal & River Trust Status
+views:
+  - title: Waterways Overview
+    icon: mdi:ferry
+    cards:
+      # Summary cards
+      - type: horizontal-stack
+        cards:
+          - type: entity
+            entity: sensor.canal_river_trust_closures
+            name: Active Closures
+            icon: mdi:lock
+            state_color: true
+          - type: entity
+            entity: sensor.canal_river_trust_stoppages
+            name: Current Stoppages
+            icon: mdi:stop
+            state_color: true
+
+      # Detailed closures list
+      - type: conditional
+        conditions:
+          - condition: numeric_state
+            entity: sensor.canal_river_trust_closures
+            above: 0
+        card:
+          type: markdown
+          title: "🚧 Current Closures"
+          content: >
+            {% for closure in state_attr('sensor.canal_river_trust_closures', 'closures') %}
+            **{{ closure.title }}** ({{ closure.waterways }})  
+            *{{ closure.reason }}*  
+            State: {{ closure.state }}  
+            {% if closure.start_date %}Start: {{ closure.start_date }}{% endif %}  
+            {% if closure.end_date %}Expected End: {{ closure.end_date }}{% endif %}  
+            Region: {{ closure.region }}
+            
+            ---
+            {% endfor %}
+
+      # Detailed stoppages list
+      - type: conditional
+        conditions:
+          - condition: numeric_state
+            entity: sensor.canal_river_trust_stoppages
+            above: 0
+        card:
+          type: markdown
+          title: "🛑 Current Stoppages"
+          content: >
+            {% for stoppage in state_attr('sensor.canal_river_trust_stoppages', 'stoppages') %}
+            **{{ stoppage.title }}** ({{ stoppage.waterways }})  
+            *{{ stoppage.type }}*  
+            State: {{ stoppage.state }}  
+            {% if stoppage.start_date %}Start: {{ stoppage.start_date }}{% endif %}  
+            {% if stoppage.end_date %}Expected End: {{ stoppage.end_date }}{% endif %}  
+            Region: {{ stoppage.region }}
+            
+            ---
+            {% endfor %}
+
+      # Historical chart
+      - type: history-graph
+        title: Waterway Issues Over Time
+        entities:
+          - sensor.canal_river_trust_closures
+          - sensor.canal_river_trust_stoppages
+        hours_to_show: 168  # 1 week
+
+      # Last updated info
+      - type: entity
+        entity: sensor.canal_river_trust_closures
+        attribute: last_updated
+        name: Last Updated
+        icon: mdi:clock-outline
+
+  - title: Map View
+    icon: mdi:map
+    cards:
+      # You could add a map card here if you extend the integration
+      # to include GPS coordinates from the API
+      - type: markdown
+        title: "🗺️ Interactive Map"
+        content: >
+          Map functionality could be added in a future version by parsing
+          the geometry data from the Canal & River Trust API.
+          
+          For now, check the [official CRT website](https://canalrivertrust.org.uk/enjoy-the-waterways/canal-and-river-network/stoppages)
+          for an interactive map of closures and stoppages.

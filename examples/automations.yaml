@@ -1,0 +1,93 @@
+# Example Home Assistant automations for Canal & River Trust integration
+
+# Automation 1: Notify when new closures are detected
+automation:
+  - alias: "CRT: New Closures Alert"
+    description: "Send notification when new canal/river closures are detected"
+    trigger:
+      - platform: state
+        entity_id: sensor.canal_river_trust_closures
+    condition:
+      - condition: template
+        value_template: "{{ trigger.to_state.state|int > trigger.from_state.state|int }}"
+    action:
+      - service: notify.notify
+        data:
+          title: "🚧 New Canal/River Closures"
+          message: >
+            {{ trigger.to_state.state }} closure(s) detected.
+            {% for closure in state_attr('sensor.canal_river_trust_closures', 'closures') %}
+            - {{ closure.title }} ({{ closure.waterways }}): {{ closure.reason }}
+            {% endfor %}
+
+  # Automation 2: Daily summary
+  - alias: "CRT: Daily Summary"
+    description: "Send daily summary of canal/river status"
+    trigger:
+      - platform: time
+        at: "08:00:00"
+    action:
+      - service: notify.notify
+        data:
+          title: "🚢 Daily Canal & River Status"
+          message: >
+            Good morning! Here's today's waterway status:
+            
+            Closures: {{ states('sensor.canal_river_trust_closures') }}
+            Stoppages: {{ states('sensor.canal_river_trust_stoppages') }}
+            
+            {% if state_attr('sensor.canal_river_trust_closures', 'closures')|length > 0 %}
+            Current closures:
+            {% for closure in state_attr('sensor.canal_river_trust_closures', 'closures') %}
+            - {{ closure.title }} ({{ closure.waterways }}): {{ closure.reason }}
+            {% endfor %}
+            {% endif %}
+
+  # Automation 3: Location-specific alerts
+  - alias: "CRT: Local Waterway Alert"
+    description: "Alert for closures/stoppages on local waterways"
+    trigger:
+      - platform: state
+        entity_id: 
+          - sensor.canal_river_trust_closures
+          - sensor.canal_river_trust_stoppages
+    condition:
+      - condition: template
+        value_template: >
+          {% set local_waterways = ['Grand Union Canal', 'River Thames', 'Oxford Canal'] %}
+          {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+          {% set stoppages = state_attr('sensor.canal_river_trust_stoppages', 'stoppages') or [] %}
+          
+          {% set local_issues = [] %}
+          {% for closure in closures %}
+            {% if closure.waterways in local_waterways %}
+              {% set local_issues = local_issues + [closure] %}
+            {% endif %}
+          {% endfor %}
+          {% for stoppage in stoppages %}
+            {% if stoppage.waterways in local_waterways %}
+              {% set local_issues = local_issues + [stoppage] %}
+            {% endif %}
+          {% endfor %}
+          
+          {{ local_issues|length > 0 }}
+    action:
+      - service: notify.notify
+        data:
+          title: "⚠️ Local Waterway Alert"
+          message: >
+            Issues detected on local waterways:
+            {% set local_waterways = ['Grand Union Canal', 'River Thames', 'Oxford Canal'] %}
+            {% set closures = state_attr('sensor.canal_river_trust_closures', 'closures') or [] %}
+            {% set stoppages = state_attr('sensor.canal_river_trust_stoppages', 'stoppages') or [] %}
+            
+            {% for closure in closures %}
+              {% if closure.waterways in local_waterways %}
+            🚧 {{ closure.waterways }} - {{ closure.title }}: {{ closure.reason }}
+              {% endif %}
+            {% endfor %}
+            {% for stoppage in stoppages %}
+              {% if stoppage.waterways in local_waterways %}
+            🛑 {{ stoppage.waterways }} - {{ stoppage.title }}: {{ stoppage.type }}
+              {% endif %}
+            {% endfor %}

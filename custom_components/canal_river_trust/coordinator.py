@@ -90,7 +90,7 @@ class CanalRiverTrustCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _matches_location_filter(self, item: dict[str, Any], location_filter: str) -> bool:
         """Check if an item matches the location filter."""
-        location_fields = ["Location", "Waterway", "Canal", "River", "Area"]
+        location_fields = ["title", "region", "waterways"]
         location_filter_lower = location_filter.lower()
         
         for field in location_fields:
@@ -102,11 +102,12 @@ class CanalRiverTrustCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _is_planned_stoppage(self, stoppage: dict[str, Any]) -> bool:
         """Check if a stoppage is planned."""
-        stoppage_type = stoppage.get("Type", "").lower()
-        return "planned" in stoppage_type or "maintenance" in stoppage_type
+        # Check if it's a planned maintenance (reasonId 1 or 2)
+        reason_id = stoppage.get("reasonId", 0)
+        return reason_id in [1, 2]  # Maintenance, Lock Works
 
     def _is_emergency_closure(self, closure: dict[str, Any]) -> bool:
         """Check if a closure is emergency."""
-        closure_type = closure.get("Type", "").lower()
-        reason = closure.get("Reason", "").lower()
-        return "emergency" in closure_type or "emergency" in reason
+        # Check if it's an emergency (reasonId 4)
+        reason_id = closure.get("reasonId", 0)
+        return reason_id == 4  # Emergency

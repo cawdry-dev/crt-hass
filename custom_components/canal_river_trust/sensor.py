@@ -11,10 +11,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    ATTR_CLOSURES,
     ATTR_LAST_UPDATED,
-    ATTR_STOPPAGES,
+    ATTR_NOTICES,
     DOMAIN,
+    REASON_MAPPINGS,
+    TYPE_MAPPINGS,
 )
 from .coordinator import CanalRiverTrustCoordinator
 
@@ -64,6 +65,20 @@ class CanalRiverTrustSensorBase(CoordinatorEntity, SensorEntity):
         """Return if entity is available."""
         return self.coordinator.last_update_success
 
+    def _extract_coordinates(self, geometry: dict[str, Any] | None) -> list[float] | None:
+        """Extract coordinates from geometry object."""
+        if not geometry:
+            return None
+        
+        if geometry.get("type") == "GeometryCollection":
+            geometries = geometry.get("geometries", [])
+            if geometries and geometries[0].get("type") == "Point":
+                return geometries[0].get("coordinates")
+        elif geometry.get("type") == "Point":
+            return geometry.get("coordinates")
+        
+        return None
+
 
 class CanalRiverTrustClosuresSensor(CanalRiverTrustSensorBase):
     """Sensor for Canal & River Trust closures."""
@@ -97,21 +112,22 @@ class CanalRiverTrustClosuresSensor(CanalRiverTrustSensorBase):
 
         attributes = {
             ATTR_LAST_UPDATED: last_updated,
-            ATTR_CLOSURES: [],
+            "closures": [],
         }
 
         for closure in closures:
             closure_info = {
-                "location": closure.get("Location", "Unknown"),
-                "waterway": closure.get("Waterway", "Unknown"),
-                "reason": closure.get("Reason", "Not specified"),
-                "status": closure.get("Status", "Unknown"),
-                "start_date": closure.get("StartDate"),
-                "end_date": closure.get("EndDate"),
-                "description": closure.get("Description", ""),
-                "type": closure.get("Type", "Unknown"),
+                "title": closure.get("title", "Unknown"),
+                "region": closure.get("region", "Unknown"),
+                "waterways": closure.get("waterways", "Unknown"),
+                "type": TYPE_MAPPINGS.get(closure.get("typeId", 0), "Unknown"),
+                "reason": REASON_MAPPINGS.get(closure.get("reasonId", 0), "Unknown"),
+                "start_date": closure.get("start"),
+                "end_date": closure.get("end"),
+                "state": closure.get("state", "Unknown"),
+                "coordinates": self._extract_coordinates(closure.get("geometry")),
             }
-            attributes[ATTR_CLOSURES].append(closure_info)
+            attributes["closures"].append(closure_info)
 
         return attributes
 
@@ -148,20 +164,21 @@ class CanalRiverTrustStoppagesSensor(CanalRiverTrustSensorBase):
 
         attributes = {
             ATTR_LAST_UPDATED: last_updated,
-            ATTR_STOPPAGES: [],
+            "stoppages": [],
         }
 
         for stoppage in stoppages:
             stoppage_info = {
-                "location": stoppage.get("Location", "Unknown"),
-                "waterway": stoppage.get("Waterway", "Unknown"),
-                "type": stoppage.get("Type", "Unknown"),
-                "status": stoppage.get("Status", "Unknown"),
-                "start_date": stoppage.get("StartDate"),
-                "end_date": stoppage.get("EndDate"),
-                "description": stoppage.get("Description", ""),
-                "reason": stoppage.get("Reason", "Not specified"),
+                "title": stoppage.get("title", "Unknown"),
+                "region": stoppage.get("region", "Unknown"),
+                "waterways": stoppage.get("waterways", "Unknown"),
+                "type": TYPE_MAPPINGS.get(stoppage.get("typeId", 0), "Unknown"),
+                "reason": REASON_MAPPINGS.get(stoppage.get("reasonId", 0), "Unknown"),
+                "start_date": stoppage.get("start"),
+                "end_date": stoppage.get("end"),
+                "state": stoppage.get("state", "Unknown"),
+                "coordinates": self._extract_coordinates(stoppage.get("geometry")),
             }
-            attributes[ATTR_STOPPAGES].append(stoppage_info)
+            attributes["stoppages"].append(stoppage_info)
 
         return attributes

@@ -14,26 +14,44 @@ DEFAULT_INCLUDE_PLANNED = True
 DEFAULT_INCLUDE_EMERGENCY = True
 
 # API URLs
-API_BASE_URL = "https://services1.arcgis.com/JNVHlsjck7xOTJJI/arcgis/rest/services"
-CLOSURES_ENDPOINT = f"{API_BASE_URL}/Closures/FeatureServer/0/query"
-STOPPAGES_ENDPOINT = f"{API_BASE_URL}/Stoppages/FeatureServer/0/query"
+API_BASE_URL = "https://canalrivertrust.org.uk/api"
+STOPPAGES_ENDPOINT = f"{API_BASE_URL}/stoppage/notices"
 
-# API Parameters
+# API Parameters for stoppages (covers both closures and stoppages)
 API_PARAMS = {
-    "where": "1=1",
-    "outFields": "*",
-    "f": "json",
-    "returnGeometry": "false"
+    "consult": "false",
+    "geometry": "point",
+    "fields": "title,region,waterways,path,typeId,reasonId,programmeId,start,end,state"
 }
 
 # Sensor attributes
-ATTR_CLOSURES = "closures"
-ATTR_STOPPAGES = "stoppages"
+ATTR_NOTICES = "notices"
 ATTR_LAST_UPDATED = "last_updated"
-ATTR_LOCATION = "location"
-ATTR_REASON = "reason"
+ATTR_TITLE = "title"
+ATTR_REGION = "region"
+ATTR_WATERWAYS = "waterways"
 ATTR_START_DATE = "start_date"
 ATTR_END_DATE = "end_date"
-ATTR_STATUS = "status"
-ATTR_TYPE = "type"
-ATTR_DESCRIPTION = "description"
+ATTR_STATE = "state"
+ATTR_TYPE_ID = "type_id"
+ATTR_REASON_ID = "reason_id"
+ATTR_PROGRAMME_ID = "programme_id"
+ATTR_COORDINATES = "coordinates"
+
+# Type mappings (based on API response)
+TYPE_MAPPINGS = {
+    1: "Stoppage",
+    2: "Closure", 
+    3: "Restriction",
+    4: "Advisory"
+}
+
+# Reason mappings (these may need to be discovered from API)
+REASON_MAPPINGS = {
+    1: "Maintenance",
+    2: "Lock Works",
+    3: "Bridge Works", 
+    4: "Emergency",
+    5: "Water Level",
+    6: "Vegetation"
+}
