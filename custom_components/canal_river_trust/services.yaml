@@ -1,0 +1,12 @@
+refresh_data:
+  name: Refresh Data
+  description: Manually refresh Canal & River Trust data
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the sensor to refresh
+      required: false
+      selector:
+        entity:
+          domain: sensor
+          integration: canal_river_trust

@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Canal & River Trust",
+        "description": "Configure the Canal & River Trust integration",
+        "data": {
+          "name": "Integration Name",
+          "update_interval": "Update Interval (minutes)",
+          "location_filter": "Location Filter (optional)",
+          "include_planned": "Include Planned Stoppages",
+          "include_emergency": "Include Emergency Closures"
+        }
+      }
+    },
+    "error": {
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "Service is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Canal & River Trust Options",
+        "description": "Configure options for the Canal & River Trust integration",
+        "data": {
+          "update_interval": "Update Interval (minutes)",
+          "location_filter": "Location Filter (optional)",
+          "include_planned": "Include Planned Stoppages",
+          "include_emergency": "Include Emergency Closures"
+        }
+      }
+    }
+  }
+}
