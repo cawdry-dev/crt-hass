@@ -42,35 +42,56 @@ class CanalRiverTrustAPI:
             _LOGGER.debug("Fetching notices from %s with params: %s", STOPPAGES_ENDPOINT, params)
             
             async with self._session.get(
-                STOPPAGES_ENDPOINT, 
+                STOPPAGES_ENDPOINT,
                 params=params,
                 headers=headers,
                 timeout=aiohttp.ClientTimeout(total=30)
             ) as response:
                 if response.status == 200:
-                    data = await response.json()
-                    _LOGGER.debug("API response received with %d features", len(data.get("features", [])))
-                    
-                    if isinstance(data, dict) and "features" in data:
-                        # Extract properties from GeoJSON features
-                        notices = []
-                        for feature in data["features"]:
-                            if "properties" in feature:
-                                notice = feature["properties"].copy()
-                                # Add geometry if present
-                                if "geometry" in feature and feature["geometry"]:
-                                    notice["geometry"] = feature["geometry"]
-                                notices.append(notice)
-                        
-                        _LOGGER.info("Successfully fetched %d notices", len(notices))
-                        return notices
-                    else:
-                        _LOGGER.warning("Unexpected API response format: %s", type(data))
+                    # Check content type to ensure we got JSON, not HTML
+                    content_type = response.headers.get('content-type', '').lower()
+                    if 'application/json' not in content_type and 'json' not in content_type:
+                        error_text = await response.text()
+                        if 'service unavailable' in error_text.lower() or 'html' in error_text.lower():
+                            _LOGGER.error("API returned HTML error page instead of JSON data - service may be temporarily unavailable")
+                            _LOGGER.debug("HTML response content: %s", error_text[:500] + "..." if len(error_text) > 500 else error_text)
+                        else:
+                            _LOGGER.error("API returned unexpected content type: %s", content_type)
+                            _LOGGER.debug("Response content: %s", error_text[:500] + "..." if len(error_text) > 500 else error_text)
+                        return []
+
+                    try:
+                        data = await response.json()
+                        _LOGGER.debug("API response received with %d features", len(data.get("features", [])))
+
+                        if isinstance(data, dict) and "features" in data:
+                            # Extract properties from GeoJSON features
+                            notices = []
+                            for feature in data["features"]:
+                                if "properties" in feature:
+                                    notice = feature["properties"].copy()
+                                    # Add geometry if present
+                                    if "geometry" in feature and feature["geometry"]:
+                                        notice["geometry"] = feature["geometry"]
+                                    notices.append(notice)
+
+                            _LOGGER.info("Successfully fetched %d notices", len(notices))
+                            return notices
+                        else:
+                            _LOGGER.warning("Unexpected API response format: %s", type(data))
+                            return []
+                    except (ValueError, TypeError) as json_err:
+                        error_text = await response.text()
+                        _LOGGER.error("Failed to parse JSON response: %s", json_err)
+                        _LOGGER.debug("Response content: %s", error_text[:500] + "..." if len(error_text) > 500 else error_text)
                         return []
                 else:
                     _LOGGER.error("Failed to fetch notices: HTTP %s", response.status)
                     error_text = await response.text()
-                    _LOGGER.error("Error response: %s", error_text)
+                    if 'service unavailable' in error_text.lower():
+                        _LOGGER.error("Canal & River Trust API is temporarily unavailable - this is a temporary issue on their end")
+                    else:
+                        _LOGGER.error("Error response: %s", error_text[:500] + "..." if len(error_text) > 500 else error_text)
                     return []
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout while fetching notices")

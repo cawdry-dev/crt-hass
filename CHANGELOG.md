@@ -16,13 +16,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.1] - 2025-07-07
 
+### Changed
+- Default update interval changed from 30 minutes to 4 hours (more appropriate for waterway notices)
+
 ### Added
 - Integration logo/icon using official Canal & River Trust branding
 - Enhanced device information with configuration URL
+- Required `fields` parameter in API requests for proper data retrieval
+- Enhanced error handling for malformed API responses
 
 ### Fixed
 - Fixed config flow error where `get_closures()` method was not found
 - Updated config flow to use correct `get_notices()` API method
+- Fixed API requests by ensuring `fields` parameter is included (was causing "Service Unavailable" responses)
 - Improved API client logging for better debugging
 - Enhanced coordinator logging for data update tracking
 

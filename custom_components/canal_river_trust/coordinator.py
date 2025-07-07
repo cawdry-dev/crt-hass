@@ -51,16 +51,23 @@ class CanalRiverTrustCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Apply filters based on configuration
             filtered_data = self._apply_filters(data)
             
-            _LOGGER.info(
-                "Data update completed: %d closures, %d stoppages", 
-                len(filtered_data.get("closures", [])), 
-                len(filtered_data.get("stoppages", []))
-            )
+            # Log the results
+            closures_count = len(filtered_data.get("closures", []))
+            stoppages_count = len(filtered_data.get("stoppages", []))
+            total_notices = len(filtered_data.get("notices", []))
+            
+            if total_notices > 0:
+                _LOGGER.info(
+                    "Data update completed: %d total notices (%d closures, %d stoppages)", 
+                    total_notices, closures_count, stoppages_count
+                )
+            else:
+                _LOGGER.warning("No notices received from API - this may indicate a temporary service issue")
             
             return filtered_data
         except Exception as err:
             _LOGGER.error("Error during data update: %s", err)
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(f"Error communicating with Canal & River Trust API: {err}") from err
 
     def _apply_filters(self, data: dict[str, Any]) -> dict[str, Any]:
         """Apply user-configured filters to the data."""

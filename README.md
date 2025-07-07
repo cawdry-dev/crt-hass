@@ -41,7 +41,7 @@ The integration can be configured through the Home Assistant UI:
 
 ### Configuration Options
 
-- **Update Interval**: How often to fetch new data (default: 30 minutes)
+- **Update Interval**: How often to fetch new data (default: 4 hours)
 - **Location Filter**: Optional filter for specific waterways or regions
 - **Include Planned**: Whether to include planned stoppages (default: true)
 - **Include Emergency**: Whether to include emergency closures (default: true)

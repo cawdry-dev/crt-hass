@@ -39,7 +39,7 @@ This Home Assistant custom integration provides real-time monitoring of Canal & 
 2. Click "Add Integration"
 3. Search for "Canal & River Trust"
 4. Configure options:
-   - **Update Interval**: 5-1440 minutes (default: 30)
+   - **Update Interval**: 5-1440 minutes (default: 240 minutes / 4 hours)
    - **Location Filter**: Optional text filter for specific areas
    - **Include Types**: Choose whether to include planned maintenance, emergency closures, etc.
 
@@ -47,7 +47,7 @@ This Home Assistant custom integration provides real-time monitoring of Canal & 
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| Update Interval | How often to fetch data (minutes) | 30 |
+| Update Interval | How often to fetch data (minutes) | 240 (4 hours) |
 | Location Filter | Filter notices by location/waterway | None |
 | Include Planned | Include planned maintenance stoppages | Yes |
 | Include Emergency | Include emergency closures | Yes |
@@ -137,6 +137,23 @@ This indicates you may have an older version of the integration files. Solution:
 2. Restart Home Assistant
 3. Reinstall the integration with the latest version
 4. Try adding the integration again
+
+### API Configuration Issues
+
+#### "Service Unavailable" or HTML responses instead of data
+If you see HTML responses or "Service Unavailable" errors, this usually indicates:
+
+1. **Missing required parameters** - The Canal & River Trust API requires specific parameters including `fields`
+2. **Malformed requests** - Ensure all required parameters are properly formatted
+
+**What you'll see in logs:**
+- "API returned HTML error page instead of JSON data"
+- HTML content in error responses
+
+**Solution:**
+- Ensure you're using the latest version of the integration (1.0.1+)
+- Check that the `fields` parameter is included in API requests
+- Verify the API endpoint URL is correct
 
 ### No Data Appearing
 1. Check Home Assistant logs for API errors

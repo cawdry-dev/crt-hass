@@ -9,7 +9,7 @@ CONF_INCLUDE_PLANNED = "include_planned"
 CONF_INCLUDE_EMERGENCY = "include_emergency"
 
 # Defaults
-DEFAULT_UPDATE_INTERVAL = 30  # minutes
+DEFAULT_UPDATE_INTERVAL = 240  # minutes (4 hours)
 DEFAULT_INCLUDE_PLANNED = True
 DEFAULT_INCLUDE_EMERGENCY = True
 
