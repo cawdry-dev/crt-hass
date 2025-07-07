@@ -8,7 +8,7 @@ from typing import Any
 
 import aiohttp
 
-from .const import API_PARAMS, STOPPAGES_ENDPOINT
+from .const import STOPPAGES_ENDPOINT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,21 +22,31 @@ class CanalRiverTrustAPI:
 
     async def get_notices(self, start_date: str | None = None, end_date: str | None = None) -> list[dict[str, Any]]:
         """Get notices (stoppages/closures) from the API."""
-        # Default to one year window if no dates provided
+        # Default to one year window if no dates provided (today + 364 days = exactly 1 year)
         if not start_date:
             start_date = datetime.now().strftime("%Y-%m-%d")
         if not end_date:
-            end_date = (datetime.now() + timedelta(days=365)).strftime("%Y-%m-%d")
+            end_date = (datetime.now() + timedelta(days=364)).strftime("%Y-%m-%d")
         
+        # Build parameters in the same order as working Postman request
         params = {
-            **API_PARAMS,
+            "consult": "false",
+            "geometry": "point",
             "start": start_date,
-            "end": end_date
+            "end": end_date,
+            "fields": "title,region,waterways,path,typeId,reasonId,programmeId,start,end,state"
         }
         
         try:
             headers = {
-                "User-Agent": "Home Assistant Canal & River Trust Integration/1.0.0"
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                "Accept": "application/json, text/plain, */*",
+                "Accept-Language": "en-US,en;q=0.9",
+                "Accept-Encoding": "gzip, deflate, br",
+                "Connection": "keep-alive",
+                "Sec-Fetch-Dest": "empty",
+                "Sec-Fetch-Mode": "cors",
+                "Sec-Fetch-Site": "same-origin"
             }
             
             _LOGGER.debug("Fetching notices from %s with params: %s", STOPPAGES_ENDPOINT, params)

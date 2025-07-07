@@ -10,5 +10,6 @@
   "requirements": ["aiohttp>=3.8.0"],
   "version": "1.0.1",
   "loggers": ["custom_components.canal_river_trust"],
-  "integration_type": "service"
+  "integration_type": "service",
+  "icon": "mdi:ferry"
 }
