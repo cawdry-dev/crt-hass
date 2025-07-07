@@ -45,13 +45,21 @@ class CanalRiverTrustCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API."""
         try:
+            _LOGGER.debug("Starting data update")
             data = await self.api.get_all_data()
             
             # Apply filters based on configuration
             filtered_data = self._apply_filters(data)
             
+            _LOGGER.info(
+                "Data update completed: %d closures, %d stoppages", 
+                len(filtered_data.get("closures", [])), 
+                len(filtered_data.get("stoppages", []))
+            )
+            
             return filtered_data
         except Exception as err:
+            _LOGGER.error("Error during data update: %s", err)
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     def _apply_filters(self, data: dict[str, Any]) -> dict[str, Any]:

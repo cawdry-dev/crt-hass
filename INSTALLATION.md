@@ -1,5 +1,9 @@
 # Canal & River Trust Home Assistant Integration - Installation Guide
 
+<div align="center">
+  <img src="custom_components/canal_river_trust/icon.png" alt="Canal & River Trust" width="150"/>
+</div>
+
 ## Quick Start
 
 This Home Assistant custom integration provides real-time monitoring of Canal & River Trust waterway closures and stoppages.
@@ -124,6 +128,15 @@ automation:
 - **Geographic Coverage**: England and Wales waterways managed by Canal & River Trust
 
 ## Troubleshooting
+
+### Common Issues
+
+#### Config Flow Error: "get_closures() method not found"
+This indicates you may have an older version of the integration files. Solution:
+1. Delete the entire `custom_components/canal_river_trust/` directory
+2. Restart Home Assistant
+3. Reinstall the integration with the latest version
+4. Try adding the integration again
 
 ### No Data Appearing
 1. Check Home Assistant logs for API errors

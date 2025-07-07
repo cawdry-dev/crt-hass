@@ -39,6 +39,8 @@ class CanalRiverTrustAPI:
                 "User-Agent": "Home Assistant Canal & River Trust Integration/1.0.0"
             }
             
+            _LOGGER.debug("Fetching notices from %s with params: %s", STOPPAGES_ENDPOINT, params)
+            
             async with self._session.get(
                 STOPPAGES_ENDPOINT, 
                 params=params,
@@ -47,6 +49,8 @@ class CanalRiverTrustAPI:
             ) as response:
                 if response.status == 200:
                     data = await response.json()
+                    _LOGGER.debug("API response received with %d features", len(data.get("features", [])))
+                    
                     if isinstance(data, dict) and "features" in data:
                         # Extract properties from GeoJSON features
                         notices = []
@@ -57,8 +61,12 @@ class CanalRiverTrustAPI:
                                 if "geometry" in feature and feature["geometry"]:
                                     notice["geometry"] = feature["geometry"]
                                 notices.append(notice)
+                        
+                        _LOGGER.info("Successfully fetched %d notices", len(notices))
                         return notices
-                    return []
+                    else:
+                        _LOGGER.warning("Unexpected API response format: %s", type(data))
+                        return []
                 else:
                     _LOGGER.error("Failed to fetch notices: HTTP %s", response.status)
                     error_text = await response.text()

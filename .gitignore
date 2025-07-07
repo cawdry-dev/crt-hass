@@ -12,8 +12,14 @@ venv/
 .DS_Store
 .vscode/
 *.egg-info/
+
+# Test and development scripts
 test_api.py
 test_new_api.py
 verify_api.py
 analyze_api.py
 validate_integration.py
+
+# Keep logo and icon files
+!custom_components/canal_river_trust/icon.png
+!custom_components/canal_river_trust/images/logo.png

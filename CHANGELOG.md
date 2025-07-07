@@ -14,6 +14,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Push notifications for new issues
 - Route planning integration
 
+## [1.0.1] - 2025-07-07
+
+### Added
+- Integration logo/icon using official Canal & River Trust branding
+- Enhanced device information with configuration URL
+
+### Fixed
+- Fixed config flow error where `get_closures()` method was not found
+- Updated config flow to use correct `get_notices()` API method
+- Improved API client logging for better debugging
+- Enhanced coordinator logging for data update tracking
+
 ## [1.0.0] - 2025-01-07
 
 ### Added

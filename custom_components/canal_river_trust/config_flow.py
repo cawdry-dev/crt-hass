@@ -79,7 +79,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         api = CanalRiverTrustAPI(session)
         
         # Try to fetch a small amount of data to test the connection
-        await api.get_closures()
+        await api.get_notices()
 
     @staticmethod
     @config_entries.callback

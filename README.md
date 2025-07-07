@@ -1,5 +1,9 @@
 # Canal & River Trust Integration for Home Assistant
 
+<div align="center">
+  <img src="custom_components/canal_river_trust/icon.png" alt="Canal & River Trust Logo" width="200"/>
+</div>
+
 A Home Assistant custom integration that provides real-time data about canal and river closures and stoppages from the Canal & River Trust.
 
 ## Features

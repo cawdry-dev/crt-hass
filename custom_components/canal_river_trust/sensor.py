@@ -56,8 +56,9 @@ class CanalRiverTrustSensorBase(CoordinatorEntity, SensorEntity):
             "identifiers": {(DOMAIN, entry.entry_id)},
             "name": "Canal & River Trust",
             "manufacturer": "Canal & River Trust",
-            "model": "Data Feed",
-            "sw_version": "1.0.0",
+            "model": "Waterway Data Feed",
+            "sw_version": "1.0.1",
+            "configuration_url": "https://canalrivertrust.org.uk",
         }
 
     @property
